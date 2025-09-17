@@ -1,0 +1,179 @@
+.copied-badge-center {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: rgba(34,197,94,0.97);
+    color: #fff;
+    padding: 18px 32px;
+    border-radius: 1.5rem;
+    font-weight: bold;
+    font-size: 1.25rem;
+    box-shadow: 0 4px 24px rgba(34,197,94,0.18);
+    opacity: 0;
+    animation: copiedBadgeFadeIn 0.32s forwards, copiedBadgeFadeOut 0.32s 0.95s forwards;
+    z-index: 20;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    pointer-events: none;
+}
+.copied-dots {
+    display: inline-flex;
+    gap: 0.1rem;
+    margin-left: 0.5rem;
+}
+.copied-dots span {
+    opacity: 0.3;
+    font-size: 1.5em;
+    animation: copiedDotBounce 1s infinite;
+    display: inline-block;
+}
+.copied-dots span:nth-child(1) { animation-delay: 0s; }
+.copied-dots span:nth-child(2) { animation-delay: 0.2s; }
+.copied-dots span:nth-child(3) { animation-delay: 0.4s; }
+
+@keyframes copiedDotBounce {
+    0%, 80%, 100% { opacity: 0.3; transform: translateY(0); }
+    40% { opacity: 1; transform: translateY(-7px); }
+}
+@keyframes copiedBadgeFadeIn {
+    to { opacity: 1; }
+}
+@keyframes copiedBadgeFadeOut {
+    to { opacity: 0; }
+}
+body {
+  font-family: Arial, sans-serif;
+  background: #f5f5f5;
+  margin: 0;
+  padding: 0;
+}
+
+.message-card {
+    transition: transform 0.55s cubic-bezier(.22,1,.36,1), box-shadow 0.3s, opacity 0.2s;
+    will-change: transform;
+}
+.message-card.dragging {
+    opacity: 0.92;
+    z-index: 1000;
+    box-shadow: 0 12px 32px rgba(0,0,0,0.18), 0 0 0 2px #3b82f6;
+    transform: scale(1.04) rotate(1.5deg);
+}
+.message-card.drag-over {
+    outline: 2px solid #3b82f6;
+    box-shadow: 0 4px 18px rgba(59,130,246,0.10);
+    transform: scale(1.025);
+}
+.dark {
+    color-scheme: dark;
+}
+.sidebar-transition {
+    transition: transform 0.3s ease-in-out;
+}
+.fade-in {
+    animation: fadeIn 0.3s ease-in-out;
+}
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+
+.drag-over {
+    border: 2px dashed #3b82f6;
+    background-color: rgba(59, 130, 246, 0.1);
+}
+.chart-container {
+    position: relative;
+    height: 280px;
+    width: 100%;
+    min-width: 220px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+}
+@media (max-width: 600px) {
+    .chart-container { height: 180px; }
+}
+.progress-bar {
+    transition: width 0.3s ease;
+}
+.card-hover {
+    transition: all 0.2s ease;
+}
+.card-hover:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+}
+.dark .card-hover:hover {
+    box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+}
+.message-card.dragging {
+    opacity: 0.5;
+    transform: rotate(5deg);
+}
+.message-card.drag-over {
+    border: 2px dashed #3b82f6;
+    background-color: rgba(59, 130, 246, 0.05);
+}
+.message-card.copied {
+    background-color: rgba(34,197,94,0.75) !important; /* verde-500 transparente */
+    border-color: #16a34a !important;
+    color: #fff !important;
+    transition: background 0.45s cubic-bezier(.22,1,.36,1), color 0.45s, border 0.45s;
+    position: relative;
+    pointer-events: none; /* Bloqueia clique durante animação */
+}
+.message-card.copied * {
+    color: #fff !important;
+}
+.copied-badge {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    background: rgba(34,197,94,0.95);
+    color: #fff;
+    padding: 8px 18px;
+    border-radius: 9999px;
+    font-weight: bold;
+    font-size: 1rem;
+    box-shadow: 0 4px 18px rgba(34,197,94,0.18);
+    opacity: 0;
+    transform: translateY(-10px) scale(0.98);
+    animation: copiedFadeIn 0.32s forwards, copiedFadeOut 0.32s 0.85s forwards;
+    z-index: 10;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+@keyframes copiedFadeIn {
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+@keyframes copiedFadeOut {
+    to {
+        opacity: 0;
+        transform: translateY(-10px) scale(0.98);
+    }
+}
+#services-list {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 18px;
+}
+.service-card {
+    cursor: pointer;
+    transition: box-shadow 0.2s, transform 0.2s;
+    min-height: 110px;
+    padding: 1.2rem;
+    background: var(--tw-bg-opacity,1) #fff;
+    border-radius: 0.75rem;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+    border: 1px solid #e5e7eb;
+}
+.service-card:hover {
+    box-shadow: 0 8px 24px rgba(59,130,246,0.10);
+    transform: translateY(-2px) scale(1.02);
+}
