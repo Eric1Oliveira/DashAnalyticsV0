@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SGE - Sistema de Gestão Empresarial</title>
+    <script src="https://cdn.tailwindcss.com"></script> 
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+    <link rel="icon" type="image/x-icon" href="favicon.ico">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+    <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+    <!-- jsPDF UMD bundle -->
+    <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+    <script>window.jsPDF = window.jspdf && window.jspdf.jsPDF ? window.jspdf.jsPDF : window.jsPDF;</script>
+        
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {}
+            }
+        }
+    </script>
+
+</head>
+<body class="bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 transition-colors duration-300">
+    <!-- User Info Bar -->
+    <div id="sidebar" class="fixed left-0 top-0 h-full w-64 bg-white dark:bg-gray-800 shadow-lg z-30 sidebar-transition transform -translate-x-full lg:translate-x-0">
+        <div class="p-6 border-b border-gray-200 dark:border-gray-700 lg:block hidden">
+            <h1 class="text-2xl font-bold text-blue-600 dark:text-blue-400">SGE</h1>
+            <p class="text-sm text-gray-600 dark:text-gray-400">Sistema de Gestão</p>
+        </div>
+        <nav class="mt-6 lg:block hidden">
+            <a href="#" onclick="showModule('dashboard')" class="nav-item flex items-center px-6 py-3 text-gray-700 dark:text-gray-300 hover:bg-blue-50 dark:hover:bg-gray-700 transition-colors">
+                <i class="fas fa-tachometer-alt mr-3"></i>
+                Dashboard
+            </a>
+            <a href="#" onclick="showModule('messages')" class="nav-item flex items-center px-6 py-3 text-gray-700 dark:text-gray-300 hover:bg-blue-50 dark:hover:bg-gray-700 transition-colors">
+                <i class="fas fa-message mr-3"></i>
+                Mensagens Rápidas
+            </a>
+            <a href="#" onclick="showModule('services')" class="nav-item flex items-center px-6 py-3 text-gray-700 dark:text-gray-300 hover:bg-blue-50 dark:hover:bg-gray-700 transition-colors">
+                <i class="fas fa-cogs mr-3"></i>
+                Serviços
+            </a>
+            <a href="#" onclick="showModule('procedures')" class="nav-item flex items-center px-6 py-3 text-gray-700 dark:text-gray-300 hover:bg-blue-50 dark:hover:bg-gray-700 transition-colors">
+                <i class="fas fa-list-check mr-3"></i>
+                Procedimentos
+            </a>
+        </nav>
+        <div class="absolute bottom-0 left-0 right-0 px-6 py-4 lg:block hidden">
+            <div class="flex items-center justify-between gap-2 bg-gray-100 dark:bg-gray-800 rounded-lg px-4 py-2">
+                <span id="sidebar-user-name" class="font-semibold text-gray-800 dark:text-gray-100 text-sm truncate"></span>
+                <div class="relative">
+                    <button id="sidebar-settings-btn" class="flex items-center gap-2 px-3 py-2 rounded-lg bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-100 transition">
+                        <i class="fas fa-cog"></i>
+                    </button>
+                    <div id="sidebar-settings-menu" class="hidden absolute right-0 bottom-12 mb-2 w-40 bg-white dark:bg-gray-900 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 z-50">
+                        <button onclick="logout()" class="w-full text-left px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-800 text-red-600 dark:text-red-400 flex items-center gap-2"><i class="fas fa-sign-out-alt"></i> Sair</button>
+                        <button onclick="toggleTheme();closeSidebarSettingsMenu()" class="w-full text-left px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-800 flex items-center gap-2"><i id="sidebar-theme-icon" class="fas fa-moon"></i> <span id="sidebar-theme-text">Modo Escuro</span></button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Mobile Bottom Navigation -->
+    <div class="lg:hidden fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 z-30">
+        <div class="flex justify-around py-2">
+            <button onclick="showModule('dashboard')" class="mobile-nav-item flex flex-col items-center py-2 px-3 text-gray-600 dark:text-gray-400">
+                <i class="fas fa-tachometer-alt text-lg"></i>
+                <span class="text-xs mt-1">Dashboard</span>
+            </button>
+            <button onclick="showModule('messages')" class="mobile-nav-item flex flex-col items-center py-2 px-3 text-gray-600 dark:text-gray-400">
+                <i class="fas fa-message text-lg"></i>
+                <span class="text-xs mt-1">Mensagens</span>
+            </button>
+            <button onclick="showModule('services')" class="mobile-nav-item flex flex-col items-center py-2 px-3 text-gray-600 dark:text-gray-400">
+                <i class="fas fa-cogs text-lg"></i>
+                <span class="text-xs mt-1">Serviços</span>
+            </button>
+            <button onclick="showModule('procedures')" class="mobile-nav-item flex flex-col items-center py-2 px-3 text-gray-600 dark:text-gray-400">
+                <i class="fas fa-list-check text-lg"></i>
+                <span class="text-xs mt-1">Procedimentos</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- Mobile Header -->
+    <div class="lg:hidden fixed top-0 left-0 right-0 bg-white dark:bg-gray-800 shadow-sm z-50 px-4 py-3 flex items-center justify-between">
+        <button id="mobile-logout-btn" onclick="logout()" class="p-2 rounded-lg hover:bg-red-100 dark:hover:bg-red-900 text-red-600 dark:text-red-400 hidden">
+            <i class="fas fa-sign-out-alt"></i>
+        </button>
+        <h1 class="text-xl font-bold text-blue-600 dark:text-blue-400">SGE</h1>
+        <button onclick="toggleTheme()" class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700">
+            <i id="mobile-theme-icon" class="fas fa-moon"></i>
+        </button>
+    </div>
+
+    <!-- Main Content -->
+    <div class="lg:ml-64 pt-16 lg:pt-0 pb-20 lg:pb-0 min-h-screen">
+        <!-- Dashboard Module -->
+        <div id="dashboard-module" class="module p-6">
+            <div class="mb-6">
+                <h2 class="text-3xl font-bold mb-2">Dashboard</h2>
+                <p class="text-gray-600 dark:text-gray-400">Visão geral do sistema</p>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-sm card-hover">
+                    <div class="flex items-center">
+                        <div class="p-3 bg-blue-100 dark:bg-blue-900 rounded-lg">
+                            <i class="fas fa-message text-blue-600 dark:text-blue-400"></i>
+                        </div>
+                        <div class="ml-4">
+                            <p class="text-sm text-gray-600 dark:text-gray-400">Mensagens</p>
+                            <p class="text-2xl font-bold" id="messages-count">0</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-sm card-hover">
+                    <div class="flex items-center">
+                        <div class="p-3 bg-green-100 dark:bg-green-900 rounded-lg">
+                            <i class="fas fa-cogs text-green-600 dark:text-green-400"></i>
+                        </div>
+                        <div class="ml-4">
+                            <p class="text-sm text-gray-600 dark:text-gray-400">Serviços</p>
+                            <p class="text-2xl font-bold" id="services-count">0</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-sm card-hover">
+                    <div class="flex items-center">
+                        <div class="p-3 bg-purple-100 dark:bg-purple-900 rounded-lg">
+                            <i class="fas fa-list-check text-purple-600 dark:text-purple-400"></i>
+                        </div>
+                        <div class="ml-4">
+                            <p class="text-sm text-gray-600 dark:text-gray-400">Procedimentos</p>
+                            <p class="text-2xl font-bold" id="procedures-count">0</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-sm card-hover">
+                    <div class="flex items-center">
+                        <div class="p-3 bg-yellow-100 dark:bg-yellow-900 rounded-lg">
+                            <i class="fas fa-star text-yellow-600 dark:text-yellow-400"></i>
+                        </div>
+                        <div class="ml-4">
+                            <p class="text-sm text-gray-600 dark:text-gray-400">Favoritos</p>
+                            <p class="text-2xl font-bold" id="favorites-count">0</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-sm">
+                    <div id="recent-activity" class="space-y-3">
+                        <p class="text-gray-500 dark:text-gray-400 text-center py-8">Nenhuma atividade recente</p>
+                    </div>
+                </div>
+                <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-sm">
+                    <h3 class="text-lg font-semibold mb-4">Estatísticas de Uso</h3>
+                    <div class="chart-container">
+                        <canvas id="usage-chart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Messages Module -->
+        <div id="messages-module" class="module hidden p-6">
+            <div class="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                <div>
+                    <h2 class="text-3xl font-bold mb-2">Mensagens Rápidas</h2>
+                    <p class="text-gray-600 dark:text-gray-400">Gerencie templates de mensagens</p>
+                </div>
+                <button onclick="openMessageModal()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors">
+                    <i class="fas fa-plus mr-2"></i>Nova Mensagem
+                </button>
+            </div>
+
+            <div class="mb-6 flex flex-col sm:flex-row gap-4">
+                <div class="flex-1">
+                    <input type="text" id="message-search" placeholder="Buscar mensagens..." class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                </div>
+                <select id="message-sort" class="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800">
+                    <option value="recent">Mais Recentes</option>
+                    <option value="pinned">Fixadas</option>
+                    <option value="used">Mais Usadas</option>
+                    <option value="alphabetic">Alfabética</option>
+                </select>
+            </div>
+
+            <div id="messages-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <!-- Messages will be loaded here -->
+            </div>
+        </div>
+
+        <!-- Services Module -->
+        <div id="services-module" class="module hidden p-6">
+            <div class="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                <div>
+                    <h2 class="text-3xl font-bold mb-2">Dashboard de Serviços</h2>
+                    <p class="text-gray-600 dark:text-gray-400">Gerencie status de serviços</p>
+                </div>
+                <div class="flex gap-2">
+                    <input type="file" id="import-xlsx" accept=".xlsx,.xls" class="hidden" onchange="importServiceFromXLSX(event)">
+                    <button onclick="document.getElementById('import-xlsx').click()" class="bg-green-600 hover:bg-green-700 text-white px-2 py-2 rounded-lg">
+                        <i class="fas fa-file-import mr-2"></i>Importar Planilha de Demandas
+                    </button>
+                    <button onclick="openServiceModal()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors">
+                        <i class="fas fa-plus mr-2"></i>Novo Serviço
+                    </button>
+                </div>
+            </div>
+
+            <!-- Gráficos removidos da seção de serviços do dashboard -->
+
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm">
+                <div class="p-6 border-b border-gray-200 dark:border-gray-700">
+                    <h3 class="text-lg font-semibold">Lista de Serviços</h3>
+                </div>
+                <div id="services-list" class="p-6">
+                    <!-- Services will be loaded here -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Procedures Module -->
+        <div id="procedures-module" class="module hidden p-6">
+            <div class="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                <div>
+                    <h2 class="text-3xl font-bold mb-2">Procedimentos</h2>
+                    <p class="text-gray-600 dark:text-gray-400">Gerencie procedimentos passo-a-passo</p>
+                </div>
+                <button onclick="openProcedureModal()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors">
+                    <i class="fas fa-plus mr-2"></i>Novo Procedimento
+                </button>
+            </div>
+
+            <div class="mb-6 flex flex-col sm:flex-row gap-4">
+                <div class="flex-1">
+                    <input type="text" id="procedure-search" placeholder="Buscar procedimentos..." class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                </div>
+                <select id="procedure-filter" class="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800">
+                    <option value="all">Todas as Categorias</option>
+                    <option value="favorites">Apenas Favoritos</option>
+                </select>
+            </div>
+
+            <div id="procedures-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <!-- Procedures will be loaded here -->
+            </div>
+        </div>
+
+        <!-- Favorites Module -->
+        <div id="favorites-module" class="module hidden p-6">
+            <div class="mb-6">
+                <h2 class="text-3xl font-bold mb-2">Favoritos</h2>
+                <p class="text-gray-600 dark:text-gray-400">Seus procedimentos favoritos</p>
+            </div>
+
+            <div id="favorites-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <!-- Favorite procedures will be loaded here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Message Modal -->
+    <div id="message-modal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white dark:bg-gray-800 rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <div class="p-6 border-b border-gray-200 dark:border-gray-700">
+                <h3 class="text-xl font-semibold" id="message-modal-title">Nova Mensagem</h3>
+            </div>
+            <div class="p-6 space-y-4">
+                <div>
+                    <label class="block text-sm font-medium mb-2">Título</label>
+                    <input type="text" id="message-title" class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium mb-2">Conteúdo</label>
+                    <textarea id="message-content" rows="6" class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="Use {{variavel}} para criar variáveis dinâmicas"></textarea>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium mb-2">Tags (separadas por vírgula)</label>
+                    <input type="text" id="message-tags" class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                </div>
+                <div class="flex items-center">
+                    <input type="checkbox" id="message-pinned" class="mr-2">
+                    <label for="message-pinned" class="text-sm">Fixar mensagem</label>
+                </div>
+            </div>
+            <div class="p-6 border-t border-gray-200 dark:border-gray-700 flex justify-end gap-3">
+                <button onclick="closeMessageModal()" class="px-4 py-2 text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200">Cancelar</button>
+                <button onclick="saveMessage()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg">Salvar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Service Modal -->
+    <div id="service-modal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white dark:bg-gray-800 rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <div class="p-6 border-b border-gray-200 dark:border-gray-700">
+                <h3 class="text-xl font-semibold" id="service-modal-title">Novo Serviço</h3>
+            </div>
+            <div class="p-6 space-y-4">
+                <div>
+                    <label class="block text-sm font-medium mb-2">Nome do Serviço</label>
+                    <input type="text" id="service-name" class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium mb-2">Descrição</label>
+                    <textarea id="service-description" rows="3" class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 focus:ring-2 focus:ring-blue-500 focus:border-transparent"></textarea>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium mb-2">Status</label>
+                    <div id="service-status-list" class="space-y-2">
+                        <!-- Status items will be added here -->
+                    </div>
+                    <button type="button" onclick="addServiceStatus()" class="mt-2 text-blue-600 hover:text-blue-700 text-sm">
+                        <i class="fas fa-plus mr-1"></i>Adicionar Status
+                    </button>
+                </div>
+            </div>
+            <div class="p-6 border-t border-gray-200 dark:border-gray-700 flex justify-end gap-3">
+                <button onclick="closeServiceModal()" class="px-4 py-2 text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200">Cancelar</button>
+                <button id="service-save-btn" onclick="saveService()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg">Salvar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Detalhes do Serviço -->
+    <div id="service-details-modal" class="fixed inset-0 bg-black bg-opacity-60 z-50 hidden flex items-center justify-center p-2 md:p-6">
+        <div class="bg-white dark:bg-gray-900 rounded-3xl max-w-6xl w-full max-h-[98vh] overflow-y-auto relative shadow-2xl border-2 border-blue-500/10 transition-all duration-200">
+            <button onclick="closeServiceDetailsModal()" class="absolute top-4 right-4 text-gray-400 hover:text-red-500 text-2xl z-10 transition-colors"><i class="fas fa-times"></i></button>
+            <div class="p-4 md:p-10">
+                <h2 id="service-details-title" class="text-3xl font-bold mb-2 text-blue-700 dark:text-blue-300"></h2>
+                <p id="service-details-desc" class="mb-6 text-gray-600 dark:text-gray-300 text-lg"></p>
+                <div class="mb-8">
+                    <h4 class="font-semibold mb-2 text-blue-600 dark:text-blue-400">Status</h4>
+                    <div id="service-details-statuses" class="flex flex-wrap gap-2"></div>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div>
+                        <h4 class="font-semibold mb-2 text-blue-600 dark:text-blue-400">Evolução das Demandas</h4>
+                        <div class="relative h-[340px] w-full bg-blue-50 dark:bg-blue-950/80 rounded-2xl p-4 flex items-center justify-center shadow-inner">
+                            <canvas id="service-details-line" width="420" height="320"></canvas>
+                        </div>
+                    </div>
+                    <div>
+                        <h4 class="font-semibold mb-2 text-blue-600 dark:text-blue-400">Distribuição dos Status</h4>
+                        <div class="relative h-[340px] w-full bg-blue-50 dark:bg-blue-950/80 rounded-2xl p-4 flex items-center justify-center shadow-inner">
+                            <canvas id="service-details-pie" width="420" height="320"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Procedure Modal -->
+    <div id="procedure-modal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white dark:bg-gray-800 rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+            <div class="p-6 border-b border-gray-200 dark:border-gray-700">
+                <h3 class="text-xl font-semibold" id="procedure-modal-title">Novo Procedimento</h3>
+            </div>
+            <div class="p-6 space-y-4">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium mb-2">Título</label>
+                        <input type="text" id="procedure-title" class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium mb-2">Categoria</label>
+                        <input type="text" id="procedure-category" class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium mb-2">Descrição</label>
+                    <textarea id="procedure-description" rows="3" class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 focus:ring-2 focus:ring-blue-500 focus:border-transparent"></textarea>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium mb-2">Passos</label>
+                    <div id="procedure-steps-list" class="space-y-3">
+                        <!-- Steps will be added here -->
+                    </div>
+                    <button type="button" onclick="addProcedureStep()" class="mt-3 text-blue-600 hover:text-blue-700 text-sm">
+                        <i class="fas fa-plus mr-1"></i>Adicionar Passo
+                    </button>
+                </div>
+            </div>
+            <div class="p-6 border-t border-gray-200 dark:border-gray-700 flex justify-end gap-3">
+                <button onclick="closeProcedureModal()" class="px-4 py-2 text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200">Cancelar</button>
+                <button onclick="saveProcedure()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg">Salvar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Detalhes do Procedimento -->
+    <div id="procedure-details-modal" class="fixed inset-0 bg-black bg-opacity-60 z-50 hidden flex items-center justify-center p-2 md:p-6">
+        <div class="bg-white dark:bg-gray-900 rounded-3xl max-w-3xl w-full max-h-[98vh] overflow-y-auto relative shadow-2xl border-2 border-blue-500/10 transition-all duration-200">
+            <button onclick="closeProcedureDetailsModal()" class="absolute top-4 right-4 text-gray-400 hover:text-red-500 text-2xl z-10 transition-colors"><i class="fas fa-times"></i></button>
+            <div class="p-4 md:p-10" id="procedure-details-content">
+                <!-- Conteúdo preenchido via JS -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Procedure Execution Modal -->
+    <div id="execution-modal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white dark:bg-gray-800 rounded-lg max-w-3xl w-full max-h-[90vh] overflow-y-auto">
+            <div class="p-6 border-b border-gray-200 dark:border-gray-700">
+                <div class="flex items-center justify-between">
+                    <h3 class="text-xl font-semibold" id="execution-title">Executando Procedimento</h3>
+                    <div class="flex items-center gap-2">
+                        <span id="execution-timer" class="text-sm text-gray-600 dark:text-gray-400">00:00</span>
+                        <button id="execution-pause" onclick="toggleExecutionTimer()" class="p-2 text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200">
+                            <i class="fas fa-pause"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="mt-4">
+                    <div class="flex items-center justify-between text-sm text-gray-600 dark:text-gray-400 mb-2">
+                        <span>Progresso</span>
+                        <span id="execution-progress-text">0/0</span>
+                    </div>
+                    <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+                        <div id="execution-progress-bar" class="bg-blue-600 h-2 rounded-full progress-bar" style="width: 0%"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="p-6">
+                <div id="execution-step-content" class="mb-6">
+                    <!-- Current step content -->
+                </div>
+                <div class="flex justify-between items-center">
+                    <button id="execution-prev" onclick="previousExecutionStep()" class="px-4 py-2 text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 disabled:opacity-50" disabled>
+                        <i class="fas fa-chevron-left mr-2"></i>Anterior
+                    </button>
+                    <div class="flex gap-2">
+                        <button onclick="restartExecution()" class="px-4 py-2 text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200">
+                            <i class="fas fa-redo mr-2"></i>Reiniciar
+                        </button>
+                        <button id="execution-next" onclick="nextExecutionStep()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg">
+                            Próximo<i class="fas fa-chevron-right ml-2"></i>
+                        </button>
+                        <button onclick="finishExecution()" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg">
+                            <i class="fas fa-check mr-2"></i>Finalizar
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="confirm-modal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white dark:bg-gray-800 rounded-lg max-w-sm w-full overflow-hidden shadow-lg">
+            <div class="p-6">
+                <h3 class="text-lg font-semibold mb-3" id="confirm-modal-title">Confirmação</h3>
+                <p class="text-gray-700 dark:text-gray-200 mb-6" id="confirm-modal-message">Tem certeza que deseja excluir?</p>
+                <div class="flex justify-end gap-3">
+                    <button id="confirm-modal-cancel" class="px-4 py-2 text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200">Cancelar</button>
+                    <button id="confirm-modal-ok" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg">Excluir</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/main.js"></script>
+</body>
+</html>
