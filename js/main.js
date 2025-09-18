@@ -42,12 +42,14 @@ function openAllActivitiesModal() {
     // Carrega e filtra atividades
     let allActivities = [];
     function fetchAndRenderActivities() {
+        console.log('[DEBUG] group_id usado na consulta:', window.currentGroupId);
         supabaseClient
             .from('activities')
             .select('*')
             .eq('group_id', window.currentGroupId)
             .order('timestamp', { ascending: false })
             .then(({ data, error }) => {
+                console.log('[DEBUG] Atividades retornadas do Supabase:', data);
                 allActivities = data || [];
                 applyFilters();
             });
@@ -71,6 +73,7 @@ function openAllActivitiesModal() {
                 return new Date(b.timestamp) - new Date(a.timestamp);
             }
         });
+        console.log('[DEBUG] Atividades após filtro visual:', filtered);
         renderActivitiesList(filtered);
     }
 
@@ -2301,21 +2304,6 @@ function saveService() {
             alert('Erro ao salvar serviço: ' + error.message);
             return;
         }
-        // Log de atividade: criação de serviço
-        const display_name = (window.currentUser && window.currentUser.user_metadata && window.currentUser.user_metadata.name)
-            ? window.currentUser.user_metadata.name
-            : (window.currentUser && (window.currentUser.name || window.currentUser.email)) || 'Usuário';
-        await supabaseClient.from('activities').insert([
-            {
-                type: 'service',
-                description: `Novo serviço criado: ${name}`,
-                user_id,
-                display_name,
-                action: 'create',
-                group_id: window.currentGroupId,
-                timestamp: new Date().toISOString()
-            }
-        ]);
         closeServiceModal();
         loadServices();
         updateDashboardCounts();
@@ -2356,21 +2344,6 @@ function editService(serviceId) {
             alert('Erro ao atualizar serviço: ' + error.message);
             return;
         }
-        // Log de atividade: edição de serviço
-        const display_name = (window.currentUser && window.currentUser.user_metadata && window.currentUser.user_metadata.name)
-            ? window.currentUser.user_metadata.name
-            : (window.currentUser && (window.currentUser.name || window.currentUser.email)) || 'Usuário';
-        await supabaseClient.from('activities').insert([
-            {
-                type: 'service',
-                description: `Serviço editado: ${name}`,
-                user_id,
-                display_name,
-                action: 'edit',
-                group_id: window.currentGroupId,
-                timestamp: new Date().toISOString()
-            }
-        ]);
         closeServiceModal();
         loadServices();
         updateDashboardCounts();
@@ -2398,21 +2371,6 @@ function deleteService(serviceId) {
                 alert('Erro ao excluir serviço: ' + error.message);
                 return;
             }
-            // Log de atividade: exclusão de serviço
-            const display_name = (window.currentUser && window.currentUser.user_metadata && window.currentUser.user_metadata.name)
-                ? window.currentUser.user_metadata.name
-                : (window.currentUser && (window.currentUser.name || window.currentUser.email)) || 'Usuário';
-            await supabaseClient.from('activities').insert([
-                {
-                    type: 'service',
-                    description: `Serviço excluído: ${serviceName}`,
-                    user_id,
-                    display_name,
-                    action: 'delete',
-                    group_id: window.currentGroupId,
-                    timestamp: new Date().toISOString()
-                }
-            ]);
             loadServices();
             updateDashboardCounts();
         });
